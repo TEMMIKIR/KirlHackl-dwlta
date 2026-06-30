@@ -1,0 +1,218 @@
+local ScreenGui = Instance.new("ScreenGui")
+local Frame = Instance.new("Frame")
+local UIListLayout = Instance.new("UIListLayout")
+local Title = Instance.new("TextLabel")
+local ToggleBtn = Instance.new("TextButton")
+
+local FlyBtn = Instance.new("TextButton")
+local ClipBtn = Instance.new("TextButton")
+local SpeedBtn = Instance.new("TextButton")
+local JumpBtn = Instance.new("TextButton")
+local InfJumpBtn = Instance.new("TextButton")
+local EspBtn = Instance.new("TextButton")
+
+ScreenGui.Parent = game.CoreGui
+ScreenGui.ResetOnSpawn = false
+
+ToggleBtn.Parent = ScreenGui
+ToggleBtn.Size = UDim2.new(0, 70, 0, 35)
+ToggleBtn.Position = UDim2.new(0, 10, 0, 10)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+ToggleBtn.BorderColor3 = Color3.fromRGB(255, 255, 255)
+ToggleBtn.BorderSizePixel = 2
+ToggleBtn.Text = "[ kirlHack ]"
+ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleBtn.Font = Enum.Font.Arcade
+ToggleBtn.TextSize = 14
+
+Frame.Parent = ScreenGui
+Frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+Frame.BorderColor3 = Color3.fromRGB(255, 255, 255)
+Frame.BorderSizePixel = 3
+Frame.Position = UDim2.new(0.15, 0, 0.2, 0)
+Frame.Size = UDim2.new(0, 200, 0, 300)
+Frame.Active = true
+Frame.Draggable = true
+Frame.Visible = true
+
+UIListLayout.Parent = Frame
+UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Padding = UDim.new(0, 8)
+
+Title.Parent = Frame
+Title.Size = UDim2.new(1, 0, 0, 40)
+Title.BackgroundTransparency = 1
+Title.Text = "* kirlHack v1.0"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 18
+Title.Font = Enum.Font.Arcade
+Title.TextXAlignment = Enum.TextXAlignment.Left
+
+local function createBtn(btn, text)
+    btn.Parent = Frame
+    btn.Size = UDim2.new(0, 180, 0, 32)
+    btn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    btn.BorderColor3 = Color3.fromRGB(255, 255, 255)
+    btn.BorderSizePixel = 2
+    btn.Text = "* " .. text
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.TextSize = 14
+    btn.Font = Enum.Font.Arcade
+    btn.TextXAlignment = Enum.TextXAlignment.Left
+end
+
+createBtn(FlyBtn, "Fly: OFF")
+createBtn(ClipBtn, "Noclip: OFF")
+createBtn(SpeedBtn, "Speed: OFF")
+createBtn(JumpBtn, "High Jump: OFF")
+createBtn(InfJumpBtn, "Inf Jump: OFF")
+createBtn(EspBtn, "ESP (Wallhack): OFF")
+
+local FlyOn = false
+local NoclipOn = false
+local SpeedOn = false
+local JumpOn = false
+local InfJumpOn = false
+local EspOn = false
+
+local players = game:GetService("Players")
+local workspace = game:GetService("Workspace")
+local runService = game:GetService("RunService")
+local userInputService = game:GetService("UserInputService")
+local player = players.LocalPlayer
+
+local function updateBtnStyle(btn, state, text)
+    if state then
+        btn.Text = "[♥] " .. text .. ": ON"
+        btn.TextColor3 = Color3.fromRGB(255, 255, 0)
+        btn.BorderColor3 = Color3.fromRGB(255, 255, 0)
+    else
+        btn.Text = "* " .. text .. ": OFF"
+        btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        btn.BorderColor3 = Color3.fromRGB(255, 255, 255)
+    end
+end
+
+ToggleBtn.MouseButton1Click:Connect(function()
+    Frame.Visible = not Frame.Visible
+    ToggleBtn.Text = Frame.Visible and "[ Hide ]" or "[ Show ]"
+    ToggleBtn.TextColor3 = Frame.Visible and Color3.fromRGB(255, 0, 0) or Color3.fromRGB(255, 255, 255)
+    ToggleBtn.BorderColor3 = Frame.Visible and Color3.fromRGB(255, 0, 0) or Color3.fromRGB(255, 255, 255)
+end)
+
+local flyBody = nil
+FlyBtn.MouseButton1Click:Connect(function()
+    FlyOn = not FlyOn
+    updateBtnStyle(FlyBtn, FlyOn, "Fly")
+    if FlyOn then
+        task.spawn(function()
+            while FlyOn do
+                local char = player.Character
+                local root = char and char:FindFirstChild("HumanoidRootPart")
+                if root then
+                    if not flyBody or flyBody.Parent ~= root then
+                        if flyBody then flyBody:Destroy() end
+                        flyBody = Instance.new("BodyVelocity")
+                        flyBody.Velocity = Vector3.new(0, 0, 0)
+                        flyBody.MaxForce = Vector3.new(400000, 400000, 400000)
+                        flyBody.Parent = root
+                    end
+                    local cam = workspace.CurrentCamera.CFrame
+                    local move = Vector3.new(0, 0, 0)
+                    local hum = char:FindFirstChild("Humanoid")
+                    if hum and hum.MoveDirection.Magnitude > 0 then
+                        move = cam:VectorToWorldSpace(Vector3.new(hum.MoveDirection.X, 0, hum.MoveDirection.Z)) * 80
+                    end
+                    flyBody.Velocity = move
+                end
+                task.wait()
+            end
+            if flyBody then flyBody:Destroy() flyBody = nil end
+        end)
+    elseif flyBody then
+        flyBody:Destroy()
+        flyBody = nil
+    end
+end)
+
+runService.Stepped:Connect(function()
+    if NoclipOn and player.Character then
+        for _, part in pairs(player.Character:GetDescendants()) do
+            if part:IsA("BasePart") then part.CanCollide = false end
+        end
+    end
+end)
+
+ClipBtn.MouseButton1Click:Connect(function()
+    NoclipOn = not NoclipOn
+    updateBtnStyle(ClipBtn, NoclipOn, "Noclip")
+end)
+
+task.spawn(function()
+    while true do
+        local char = player.Character
+        local hum = char and char:FindFirstChild("Humanoid")
+        if hum then
+            hum.WalkSpeed = SpeedOn and 120 or 16
+            hum.JumpPower = JumpOn and 150 or 50
+        end
+        task.wait(0.3)
+    end
+end)
+
+SpeedBtn.MouseButton1Click:Connect(function()
+    SpeedOn = not SpeedOn
+    updateBtnStyle(SpeedBtn, SpeedOn, "Speed")
+end)
+
+JumpBtn.MouseButton1Click:Connect(function()
+    JumpOn = not JumpOn
+    if JumpOn and player.Character and player.Character:FindFirstChild("Humanoid") then
+        player.Character.Humanoid.UseJumpPower = true
+    end
+    updateBtnStyle(JumpBtn, JumpOn, "High Jump")
+end)
+
+userInputService.JumpRequest:Connect(function()
+    if InfJumpOn and player.Character then
+        local hum = player.Character:FindFirstChild("Humanoid")
+        if hum then hum:ChangeState(Enum.HumanoidStateType.Jumping) end
+    end
+end)
+
+InfJumpBtn.MouseButton1Click:Connect(function()
+    InfJumpOn = not InfJumpOn
+    updateBtnStyle(InfJumpBtn, InfJumpOn, "Inf Jump")
+end)
+
+local function applyEsp(p)
+    if p == player then return end
+    local function addHighlight(char)
+        if char:FindFirstChild("ESPHighlight") then return end
+        local hl = Instance.new("Highlight")
+        hl.Name = "ESPHighlight"
+        hl.FillColor = Color3.fromRGB(255, 0, 0)
+        hl.OutlineColor = Color3.fromRGB(255, 255, 255)
+        hl.FillTransparency = 0.5
+        hl.OutlineTransparency = 0
+        hl.Adornee = char
+        hl.Enabled = EspOn
+        hl.Parent = char
+    end
+    if p.Character then addHighlight(p.Character) end
+    p.CharacterAdded:Connect(addHighlight)
+end
+
+for _, p in pairs(players:GetPlayers()) do applyEsp(p) end
+players.PlayerAdded:Connect(applyEsp)
+
+EspBtn.MouseButton1Click:Connect(function()
+    EspOn = not EspOn
+    updateBtnStyle(EspBtn, EspOn, "ESP (Wallhack)")
+    for _, p in pairs(players:GetPlayers()) do
+        if p.Character and p.Character:FindFirstChild("ESPHighlight") then
+            p.Character.ESPHighlight.Enabled = EspOn
+        end
+    end
+end)
